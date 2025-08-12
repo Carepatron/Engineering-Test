@@ -1,0 +1,209 @@
+.conversation-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--bg-secondary);
+}
+
+.conversation-header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 4px var(--shadow-light);
+}
+
+.back-button {
+  color: var(--accent-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.back-button:hover {
+  text-decoration: underline;
+}
+
+.conversation-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.conversation-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.conversation-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.logged-in-as {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.conversation-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.conversation-actions .logout-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.conversation-actions .logout-btn:hover {
+  background: var(--border-secondary);
+}
+
+.refresh-button {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.refresh-button:hover:not(:disabled) {
+  background: var(--border-secondary);
+}
+
+.refresh-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  background: var(--bg-primary);
+}
+
+.message {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.message.patient {
+  justify-content: flex-end;
+}
+
+.message.concierge {
+  justify-content: flex-start;
+}
+
+.message-bubble {
+  max-width: 60%;
+  padding: 8px 12px;
+  border-radius: 18px;
+  word-wrap: break-word;
+}
+
+.patient .message-bubble {
+  background: #0084ff;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.concierge .message-bubble {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-bottom-left-radius: 4px;
+}
+
+.message-content {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.message-time {
+  font-size: 11px;
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+.patient .message-time {
+  color: rgba(255, 255, 255, 0.8);
+  text-align: right;
+}
+
+.concierge .message-time {
+  color: var(--text-secondary);
+}
+
+.message-input-container {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-primary);
+  padding: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.message-input {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid var(--border-primary);
+  border-radius: 20px;
+  outline: none;
+  font-size: 14px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.2s;
+}
+
+.message-input:focus {
+  background: var(--bg-secondary);
+  border-color: #0084ff;
+}
+
+.message-input:disabled {
+  opacity: 0.6;
+}
+
+.send-button {
+  padding: 8px 16px;
+  background: #0084ff;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.send-button:hover:not(:disabled) {
+  background: #0073e6;
+}
+
+.send-button:disabled {
+  background: #b0d5ff;
+  cursor: not-allowed;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+}

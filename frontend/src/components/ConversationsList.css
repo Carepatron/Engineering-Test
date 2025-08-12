@@ -1,0 +1,249 @@
+.conversations-list {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.welcome-text {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.user-role {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.logout-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.logout-btn:hover {
+  background: var(--border-secondary);
+}
+
+.conversations-list h1 {
+  color: var(--accent-primary);
+  margin: 0;
+}
+
+.new-conversation-btn {
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.new-conversation-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.new-conversation-btn:disabled {
+  background: var(--accent-disabled);
+  cursor: not-allowed;
+}
+
+.create-form {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px var(--shadow-medium);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.create-form-content {
+  padding: 20px;
+}
+
+.create-form h3 {
+  margin: 0 0 15px 0;
+  color: var(--text-primary);
+  font-size: 18px;
+}
+
+.form-description {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0 0 15px 0;
+  line-height: 1.4;
+}
+
+.patient-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.patient-name-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 15px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.patient-name-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(45, 136, 255, 0.2);
+}
+
+.patient-name-input:disabled {
+  background: var(--bg-primary);
+  color: var(--text-tertiary);
+}
+
+.create-form-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.create-btn {
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.create-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.create-btn:disabled {
+  background: var(--accent-disabled);
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background: var(--border-secondary);
+}
+
+.cancel-btn:disabled {
+  background: var(--bg-primary);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+
+.conversations-container {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px var(--shadow-light);
+}
+
+.conversation-item {
+  display: block;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-primary);
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.2s;
+}
+
+.conversation-item:hover {
+  background-color: var(--bg-primary);
+}
+
+.conversation-item:last-child {
+  border-bottom: none;
+}
+
+.conversation-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.patient-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.message-count {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.conversation-preview {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation-time {
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+
+.no-conversations {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+}
