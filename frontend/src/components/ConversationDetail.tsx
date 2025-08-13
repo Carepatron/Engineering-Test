@@ -87,35 +87,12 @@ const ConversationDetail: React.FC = () => {
     setInputMessage('');
     setSending(true);
 
-    // Optimistic update - add the message immediately to the UI
-    const tempMessage = {
-      id: 'temp-' + Date.now(),
-      content: messageContent,
-      isFromPatient: true,
-      timestamp: new Date().toISOString()
-    };
-
-    setConversation(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        messages: [...prev.messages, tempMessage]
-      };
-    });
-
     try {
       const response = await api.sendMessage(id, messageContent, user || undefined);
       
-      // Replace the temp message with the actual response
-      setConversation(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          messages: prev.messages.map(msg => 
-            msg.id === tempMessage.id ? response : msg
-          )
-        };
-      });
+      // Don't add the message optimistically - let SignalR handle it
+      // This prevents the duplicate message issue
+      console.log('Message sent successfully, waiting for SignalR broadcast');
 
       // Fallback: If SignalR doesn't deliver AI response within 3 seconds, fetch manually
       setTimeout(async () => {
@@ -135,16 +112,6 @@ const ConversationDetail: React.FC = () => {
 
     } catch (error) {
       console.error('Error sending message:', error);
-      
-      // Remove the temp message on error
-      setConversation(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          messages: prev.messages.filter(msg => msg.id !== tempMessage.id)
-        };
-      });
-      
       alert('Failed to send message. Please try again.');
       setInputMessage(messageContent); // Restore the message text
     } finally {

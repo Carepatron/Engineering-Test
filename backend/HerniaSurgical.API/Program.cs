@@ -193,7 +193,8 @@ app.MapPost("/api/conversations/{id}/messages", async (Guid id, MessageDto messa
         Console.WriteLine($"Failed to send patient message via SignalR: {ex.Message}");
     }
 
-    var aiResponse = GenerateAIResponse(messageDto.Content);
+    // Only generate AI responses for patient messages, not staff messages
+    var aiResponse = messageDto.SenderUserRole == "Patient" ? GenerateAIResponse(messageDto.Content) : null;
     if (!string.IsNullOrEmpty(aiResponse))
     {
         var aiMessage = new Message
