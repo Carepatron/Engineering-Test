@@ -2,6 +2,8 @@
 
 A full-featured patient messaging system with authentication, real-time communication, and automated AI responses for Hernia Surgical LLC.
 
+# Requirements of test ➡️ [here](https://github.com/Carepatron/Engineering-Test/CHALLENGE.md)
+
 ## Project Structure
 
 ```

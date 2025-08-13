@@ -627,6 +627,119 @@ app.MapPost("/api/schedules", async (ScheduleDto scheduleDto, AppDbContext db) =
     }
 });
 
+// Schedule visualization endpoint - combines schedule and appointments
+app.MapGet("/api/schedules/staff/{staffUserId}/visualization", async (string staffUserId, AppDbContext db, DateTime? startDate, DateTime? endDate) =>
+{
+    try
+    {
+        // Default to current week if no dates provided
+        var start = startDate ?? DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
+        var end = endDate ?? start.AddDays(6);
+
+        // Get staff user info
+        var staffUser = await db.Users.FirstOrDefaultAsync(u => u.Id == staffUserId);
+        if (staffUser == null)
+            return Results.NotFound($"Staff user with ID {staffUserId} not found");
+
+        // Get active schedule for staff user
+        var schedule = await db.Schedules
+            .Include(s => s.Slots)
+            .FirstOrDefaultAsync(s => s.StaffUserId == staffUserId && s.IsActive);
+
+        if (schedule == null)
+            return Results.Ok(new
+            {
+                StaffUserId = staffUserId,
+                StaffUserName = staffUser.Name,
+                StartDate = start,
+                EndDate = end,
+                Message = "No active schedule found for this staff member",
+                Days = new object[0]
+            });
+
+        // Get appointments for the date range
+        var appointments = await db.Appointments
+            .Include(a => a.Client)
+            .Where(a => a.StaffUserId == staffUserId && 
+                       a.StartDateUtc.Date >= start.Date && 
+                       a.StartDateUtc.Date <= end.Date)
+            .OrderBy(a => a.StartDateUtc)
+            .ToListAsync();
+
+        // Build visualization for each day
+        var days = new List<object>();
+        for (var date = start; date <= end; date = date.AddDays(1))
+        {
+            var dayOfWeek = date.DayOfWeek;
+            var daySlots = schedule.Slots.Where(s => s.DayOfWeek == dayOfWeek).ToList();
+            var dayAppointments = appointments.Where(a => a.StartDateUtc.Date == date.Date).ToList();
+
+            var dayInfo = new
+            {
+                Date = date.ToString("yyyy-MM-dd"),
+                DayOfWeek = dayOfWeek.ToString(),
+                DayNumber = (int)dayOfWeek,
+                IsWorkingDay = daySlots.Any(),
+                WorkingHours = daySlots.Select(slot => new
+                {
+                    StartTime = slot.StartTime.ToString(@"hh\:mm"),
+                    EndTime = slot.EndTime.ToString(@"hh\:mm"),
+                    IsAvailable = slot.IsAvailable,
+                    Notes = slot.Notes
+                }).ToList(),
+                Appointments = dayAppointments.Select(apt => new
+                {
+                    apt.Id,
+                    apt.ClientId,
+                    ClientName = apt.Client.FullName,
+                    StartTime = apt.StartDateUtc.ToString("HH:mm"),
+                    EndTime = apt.EndDateUtc.ToString("HH:mm"),
+                    apt.AppointmentType,
+                    apt.Status,
+                    apt.Notes,
+                    Duration = $"{(apt.EndDateUtc - apt.StartDateUtc).TotalMinutes} minutes"
+                }).ToList(),
+                Summary = new
+                {
+                    TotalAppointments = dayAppointments.Count,
+                    TotalDuration = dayAppointments.Sum(a => (a.EndDateUtc - a.StartDateUtc).TotalMinutes),
+                    WorkingHours = daySlots.Sum(s => (s.EndTime - s.StartTime).TotalHours),
+                    IsFullyBooked = daySlots.Any() && dayAppointments.Sum(a => (a.EndDateUtc - a.StartDateUtc).TotalMinutes) >= daySlots.Sum(s => (s.EndTime - s.StartTime).TotalMinutes)
+                }
+            };
+
+            days.Add(dayInfo);
+        }
+
+        var weekSummary = new
+        {
+            TotalWorkingDays = days.Count(d => ((dynamic)d).IsWorkingDay),
+            TotalAppointments = appointments.Count,
+            TotalWorkingHours = schedule.Slots.Sum(s => (s.EndTime - s.StartTime).TotalHours),
+            TotalAppointmentHours = appointments.Sum(a => (a.EndDateUtc - a.StartDateUtc).TotalHours),
+            UtilizationRate = schedule.Slots.Sum(s => (s.EndTime - s.StartTime).TotalHours) > 0 
+                ? Math.Round((appointments.Sum(a => (a.EndDateUtc - a.StartDateUtc).TotalHours) / schedule.Slots.Sum(s => (s.EndTime - s.StartTime).TotalHours)) * 100, 1)
+                : 0
+        };
+
+        return Results.Ok(new
+        {
+            StaffUserId = staffUserId,
+            StaffUserName = staffUser.Name,
+            ScheduleName = schedule.Name,
+            StartDate = start,
+            EndDate = end,
+            WeekSummary = weekSummary,
+            Days = days
+        });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error getting schedule visualization: {ex.Message}");
+        return Results.Problem("Failed to retrieve schedule visualization");
+    }
+});
+
 app.MapHub<ConversationHub>("/conversationHub");
 
 app.Run();

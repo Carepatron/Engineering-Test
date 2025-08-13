@@ -103,8 +103,8 @@ namespace HerniaSurgical.API.Data
                     Id = Guid.NewGuid(),
                     ClientId = clients[0].Id, // John Smith
                     StaffUserId = "1", // Sarah Johnson (Medical Assistant)
-                    StartDateUtc = DateTime.UtcNow.AddDays(7).Date.AddHours(9), // Next week at 9 AM
-                    EndDateUtc = DateTime.UtcNow.AddDays(7).Date.AddHours(10), // Next week at 10 AM
+                    StartDateUtc = DateTime.UtcNow.AddDays(1).Date.AddHours(9), // Next week at 9 AM
+                    EndDateUtc = DateTime.UtcNow.AddDays(1).Date.AddHours(10), // Next week at 10 AM
                     AppointmentType = "Initial Consultation",
                     Status = "Scheduled",
                     Provider = "Dr. Sarah Johnson",
@@ -117,8 +117,8 @@ namespace HerniaSurgical.API.Data
                     Id = Guid.NewGuid(),
                     ClientId = clients[1].Id, // Emily Davis
                     StaffUserId = "1", // Sarah Johnson (Medical Assistant)
-                    StartDateUtc = DateTime.UtcNow.AddDays(10).Date.AddHours(14), // 10 days from now at 2 PM
-                    EndDateUtc = DateTime.UtcNow.AddDays(10).Date.AddHours(15), // 10 days from now at 3 PM
+                    StartDateUtc = DateTime.UtcNow.AddDays(0).Date.AddHours(14), // 10 days from now at 2 PM
+                    EndDateUtc = DateTime.UtcNow.AddDays(0).Date.AddHours(15), // 10 days from now at 3 PM
                     AppointmentType = "Follow-up",
                     Status = "Scheduled",
                     Provider = "Dr. Sarah Johnson",
