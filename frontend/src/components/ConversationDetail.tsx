@@ -216,17 +216,36 @@ const ConversationDetail: React.FC = () => {
       </div>
       
       <div className="messages-container">
-        {conversation.messages.map((message) => (
-          <div
-            key={message.id}
-            className={`message ${message.isFromPatient ? 'patient' : 'concierge'}`}
-          >
-            <div className="message-bubble">
-              <div className="message-content">{message.content}</div>
-              <div className="message-time">{formatTime(message.timestamp)}</div>
+        {conversation.messages.map((message) => {
+          let messageClass: string;
+          let showSenderName = false;
+          
+          if (user?.role === 'Patient') {
+            // Patient view: their messages on right, all clinic messages on left
+            messageClass = message.senderUserId === user.id ? 'patient' : 'concierge';
+            showSenderName = message.senderUserId !== user.id;
+          } else {
+            // Staff view: patient messages on left, all clinic messages (staff/AI) on right
+            const isPatientMessage = message.senderUserRole === 'Patient';
+            messageClass = isPatientMessage ? 'concierge' : 'patient';
+            showSenderName = isPatientMessage;
+          }
+          
+          return (
+            <div
+              key={message.id}
+              className={`message ${messageClass}`}
+            >
+              <div className="message-bubble">
+                <div className="message-content">{message.content}</div>
+                <div className="message-time">{formatTime(message.timestamp)}</div>
+                {showSenderName && (
+                  <div className="message-sender">{message.senderUserName}</div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
 

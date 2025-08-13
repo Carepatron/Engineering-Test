@@ -152,6 +152,14 @@
   color: var(--text-secondary);
 }
 
+.message-sender {
+  font-size: 10px;
+  margin-top: 2px;
+  opacity: 0.6;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
 .message-input-container {
   background: var(--bg-secondary);
   border-top: 1px solid var(--border-primary);

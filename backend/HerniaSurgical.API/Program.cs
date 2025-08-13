@@ -67,12 +67,33 @@ app.MapPost("/api/conversations", async (CreateConversationDto dto, AppDbContext
     }
 });
 
-app.MapGet("/api/conversations", async (AppDbContext db) =>
+app.MapGet("/api/conversations", async (HttpContext httpContext, AppDbContext db) =>
 {
     try
     {
-        var conversations = await db.Conversations
-            .Include(c => c.Messages)
+        var userId = httpContext.Request.Query["userId"].ToString();
+        var userRole = httpContext.Request.Query["userRole"].ToString();
+        
+        Console.WriteLine($"API Request - userId: '{userId}', userRole: '{userRole}'");
+        
+        var conversationsQueryable = db.Conversations.Include(c => c.Messages).AsQueryable();
+        
+        // Filter conversations based on user role
+        if (!string.IsNullOrEmpty(userId) && userRole == "Patient")
+        {
+            Console.WriteLine($"Filtering conversations for patient: {userId}");
+            // Patients can only see conversations they created or where they sent messages
+            conversationsQueryable = conversationsQueryable.Where(c => 
+                c.CreatedByUserId == userId || 
+                c.Messages.Any(m => m.SenderUserId == userId));
+        }
+        else
+        {
+            Console.WriteLine($"No filtering - userId empty: {string.IsNullOrEmpty(userId)}, userRole: '{userRole}'");
+        }
+        // Staff members can see all conversations (no filtering)
+
+        var conversations = await conversationsQueryable
             .Select(c => new
             {
                 c.Id,
@@ -80,7 +101,10 @@ app.MapGet("/api/conversations", async (AppDbContext db) =>
                 c.StartedAt,
                 c.LastMessageAt,
                 LastMessage = c.Messages.OrderByDescending(m => m.Timestamp).FirstOrDefault().Content,
-                MessageCount = c.Messages.Count
+                MessageCount = c.Messages.Count,
+                c.CreatedByUserId,
+                c.CreatedByUserName,
+                c.CreatedByUserRole
             })
             .ToListAsync();
 

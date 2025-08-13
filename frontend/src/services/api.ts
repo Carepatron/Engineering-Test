@@ -31,8 +31,9 @@ export interface ConversationWithMessages {
 }
 
 const api = {
-  getConversations: async (): Promise<Conversation[]> => {
-    const response = await axios.get(`${API_BASE_URL}/conversations`);
+  getConversations: async (user?: { id: string; name: string; role: string }): Promise<Conversation[]> => {
+    const params = user ? { userId: user.id, userRole: user.role } : {};
+    const response = await axios.get(`${API_BASE_URL}/conversations`, { params });
     return response.data;
   },
 

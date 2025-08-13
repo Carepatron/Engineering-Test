@@ -16,11 +16,11 @@ const ConversationsList: React.FC = () => {
 
   useEffect(() => {
     loadConversations();
-  }, []);
+  }, [user]);
 
   const loadConversations = async () => {
     try {
-      const data = await api.getConversations();
+      const data = await api.getConversations(user || undefined);
       setConversations(data);
     } catch (error) {
       console.error('Error loading conversations:', error);
