@@ -12,6 +12,8 @@ namespace HerniaSurgical.API.Data
         public DbSet<Client> Clients { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Schedule> Schedules { get; set; }
+        public DbSet<ScheduleSlot> ScheduleSlots { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -53,6 +55,28 @@ namespace HerniaSurgical.API.Data
                 .OnDelete(DeleteBehavior.SetNull)
                 .IsRequired(false);
 
+            // User -> Appointments relationship (optional)
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.StaffAppointments)
+                .WithOne(a => a.StaffUser)
+                .HasForeignKey(a => a.StaffUserId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            // User -> Schedules relationship
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Schedules)
+                .WithOne(s => s.StaffUser)
+                .HasForeignKey(s => s.StaffUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Schedule -> ScheduleSlots relationship
+            modelBuilder.Entity<Schedule>()
+                .HasMany(s => s.Slots)
+                .WithOne(ss => ss.Schedule)
+                .HasForeignKey(ss => ss.ScheduleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Indexes for performance
             modelBuilder.Entity<Message>()
                 .HasIndex(m => m.ConversationId);
@@ -64,7 +88,10 @@ namespace HerniaSurgical.API.Data
                 .HasIndex(a => a.ClientId);
             
             modelBuilder.Entity<Appointment>()
-                .HasIndex(a => a.AppointmentDate);
+                .HasIndex(a => a.StartDateUtc);
+            
+            modelBuilder.Entity<Appointment>()
+                .HasIndex(a => a.StaffUserId);
             
             modelBuilder.Entity<Client>()
                 .HasIndex(c => c.Email)
@@ -80,6 +107,16 @@ namespace HerniaSurgical.API.Data
             
             modelBuilder.Entity<Conversation>()
                 .HasIndex(c => c.CreatedByUserId);
+            
+            // Schedule indexes
+            modelBuilder.Entity<Schedule>()
+                .HasIndex(s => s.StaffUserId);
+            
+            modelBuilder.Entity<ScheduleSlot>()
+                .HasIndex(ss => ss.ScheduleId);
+            
+            modelBuilder.Entity<ScheduleSlot>()
+                .HasIndex(ss => new { ss.ScheduleId, ss.DayOfWeek });
         }
     }
 }

@@ -17,9 +17,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", builder =>
     {
-        builder.AllowAnyOrigin()
+        builder.WithOrigins("http://localhost:3000")
                .AllowAnyMethod()
-               .AllowAnyHeader();
+               .AllowAnyHeader()
+               .AllowCredentials();
     });
 });
 
@@ -29,6 +30,7 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.EnsureCreated();
+    await DataSeeder.SeedAsync(dbContext);
 }
 
 app.UseCors("AllowAll");
@@ -355,21 +357,24 @@ app.MapGet("/api/appointments", async (AppDbContext db) =>
     {
         var appointments = await db.Appointments
             .Include(a => a.Client)
+            .Include(a => a.StaffUser)
             .Select(a => new
             {
                 a.Id,
                 a.ClientId,
                 ClientName = a.Client.FullName,
-                a.AppointmentDate,
+                a.StaffUserId,
+                StaffUserName = a.StaffUser != null ? a.StaffUser.Name : null,
+                a.StartDateUtc,
+                a.EndDateUtc,
                 a.AppointmentType,
                 a.Status,
                 a.Provider,
-                a.DurationMinutes,
                 a.Notes,
                 a.CreatedAt,
                 a.UpdatedAt
             })
-            .OrderBy(a => a.AppointmentDate)
+            .OrderBy(a => a.StartDateUtc)
             .ToListAsync();
         
         return Results.Ok(appointments);
@@ -407,7 +412,7 @@ app.MapGet("/api/clients/{clientId}/appointments", async (Guid clientId, AppDbCo
     {
         var appointments = await db.Appointments
             .Where(a => a.ClientId == clientId)
-            .OrderBy(a => a.AppointmentDate)
+            .OrderBy(a => a.StartDateUtc)
             .ToListAsync();
         
         return Results.Ok(appointments);
@@ -432,11 +437,12 @@ app.MapPost("/api/appointments", async (AppointmentDto appointmentDto, AppDbCont
         {
             Id = Guid.NewGuid(),
             ClientId = appointmentDto.ClientId,
-            AppointmentDate = appointmentDto.AppointmentDate,
+            StaffUserId = appointmentDto.StaffUserId,
+            StartDateUtc = appointmentDto.StartDateUtc,
+            EndDateUtc = appointmentDto.EndDateUtc,
             AppointmentType = appointmentDto.AppointmentType,
             Status = appointmentDto.Status ?? "Scheduled",
             Provider = appointmentDto.Provider,
-            DurationMinutes = appointmentDto.DurationMinutes,
             Notes = appointmentDto.Notes,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -472,11 +478,12 @@ app.MapPut("/api/appointments/{id}", async (Guid id, AppointmentDto appointmentD
         }
         
         appointment.ClientId = appointmentDto.ClientId;
-        appointment.AppointmentDate = appointmentDto.AppointmentDate;
+        appointment.StaffUserId = appointmentDto.StaffUserId;
+        appointment.StartDateUtc = appointmentDto.StartDateUtc;
+        appointment.EndDateUtc = appointmentDto.EndDateUtc;
         appointment.AppointmentType = appointmentDto.AppointmentType;
         appointment.Status = appointmentDto.Status ?? appointment.Status;
         appointment.Provider = appointmentDto.Provider;
-        appointment.DurationMinutes = appointmentDto.DurationMinutes;
         appointment.Notes = appointmentDto.Notes;
         appointment.UpdatedAt = DateTime.UtcNow;
         
@@ -488,6 +495,135 @@ app.MapPut("/api/appointments/{id}", async (Guid id, AppointmentDto appointmentD
     {
         Console.WriteLine($"Error updating appointment: {ex.Message}");
         return Results.Problem("Failed to update appointment");
+    }
+});
+
+// Schedule endpoints
+app.MapGet("/api/schedules", async (AppDbContext db) =>
+{
+    try
+    {
+        var schedules = await db.Schedules
+            .Include(s => s.StaffUser)
+            .Include(s => s.Slots)
+            .Select(s => new
+            {
+                s.Id,
+                s.StaffUserId,
+                StaffUserName = s.StaffUser.Name,
+                s.Name,
+                s.IsActive,
+                s.CreatedAt,
+                s.UpdatedAt,
+                Slots = s.Slots.Select(slot => new
+                {
+                    slot.Id,
+                    slot.DayOfWeek,
+                    DayName = slot.DayOfWeek.ToString(),
+                    StartTime = slot.StartTime.ToString(@"hh\:mm"),
+                    EndTime = slot.EndTime.ToString(@"hh\:mm"),
+                    slot.IsAvailable,
+                    slot.Notes
+                }).OrderBy(slot => slot.DayOfWeek)
+            })
+            .OrderBy(s => s.StaffUserName)
+            .ToListAsync();
+        
+        return Results.Ok(schedules);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error getting schedules: {ex.Message}");
+        return Results.Problem("Failed to retrieve schedules");
+    }
+});
+
+app.MapGet("/api/schedules/staff/{staffUserId}", async (string staffUserId, AppDbContext db) =>
+{
+    try
+    {
+        var schedules = await db.Schedules
+            .Include(s => s.StaffUser)
+            .Include(s => s.Slots)
+            .Where(s => s.StaffUserId == staffUserId)
+            .Select(s => new
+            {
+                s.Id,
+                s.StaffUserId,
+                StaffUserName = s.StaffUser.Name,
+                s.Name,
+                s.IsActive,
+                s.CreatedAt,
+                s.UpdatedAt,
+                Slots = s.Slots.Select(slot => new
+                {
+                    slot.Id,
+                    slot.DayOfWeek,
+                    DayName = slot.DayOfWeek.ToString(),
+                    StartTime = slot.StartTime.ToString(@"hh\:mm"),
+                    EndTime = slot.EndTime.ToString(@"hh\:mm"),
+                    slot.IsAvailable,
+                    slot.Notes
+                }).OrderBy(slot => slot.DayOfWeek)
+            })
+            .OrderBy(s => s.Name)
+            .ToListAsync();
+        
+        return Results.Ok(schedules);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error getting staff schedules: {ex.Message}");
+        return Results.Problem("Failed to retrieve staff schedules");
+    }
+});
+
+app.MapPost("/api/schedules", async (ScheduleDto scheduleDto, AppDbContext db) =>
+{
+    try
+    {
+        // Verify staff user exists
+        var staffExists = await db.Users.AnyAsync(u => u.Id == scheduleDto.StaffUserId);
+        if (!staffExists)
+            return Results.BadRequest($"Staff user with ID {scheduleDto.StaffUserId} does not exist");
+
+        var schedule = new Schedule
+        {
+            Id = Guid.NewGuid(),
+            StaffUserId = scheduleDto.StaffUserId,
+            Name = scheduleDto.Name,
+            IsActive = scheduleDto.IsActive,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        db.Schedules.Add(schedule);
+        await db.SaveChangesAsync();
+
+        // Add schedule slots
+        if (scheduleDto.Slots != null && scheduleDto.Slots.Any())
+        {
+            var slots = scheduleDto.Slots.Select(slotDto => new ScheduleSlot
+            {
+                Id = Guid.NewGuid(),
+                ScheduleId = schedule.Id,
+                DayOfWeek = slotDto.DayOfWeek,
+                StartTime = slotDto.StartTime,
+                EndTime = slotDto.EndTime,
+                IsAvailable = slotDto.IsAvailable,
+                Notes = slotDto.Notes
+            }).ToList();
+
+            db.ScheduleSlots.AddRange(slots);
+            await db.SaveChangesAsync();
+        }
+
+        return Results.Created($"/api/schedules/{schedule.Id}", schedule);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error creating schedule: {ex.Message}");
+        return Results.Problem("Failed to create schedule");
     }
 });
 
@@ -546,10 +682,28 @@ public class ClientDto
 public class AppointmentDto
 {
     public Guid ClientId { get; set; }
-    public DateTime AppointmentDate { get; set; }
+    public string? StaffUserId { get; set; }
+    public DateTime StartDateUtc { get; set; }
+    public DateTime EndDateUtc { get; set; }
     public string AppointmentType { get; set; }
     public string Status { get; set; }
     public string Provider { get; set; }
-    public int DurationMinutes { get; set; }
     public string Notes { get; set; }
+}
+
+public class ScheduleDto
+{
+    public string StaffUserId { get; set; }
+    public string Name { get; set; }
+    public bool IsActive { get; set; } = true;
+    public List<ScheduleSlotDto>? Slots { get; set; }
+}
+
+public class ScheduleSlotDto
+{
+    public DayOfWeek DayOfWeek { get; set; }
+    public TimeSpan StartTime { get; set; }
+    public TimeSpan EndTime { get; set; }
+    public bool IsAvailable { get; set; } = true;
+    public string? Notes { get; set; }
 }

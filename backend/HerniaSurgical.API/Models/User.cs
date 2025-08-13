@@ -14,5 +14,7 @@ namespace HerniaSurgical.API.Models
         // Navigation properties
         public List<Conversation> CreatedConversations { get; set; } = new List<Conversation>();
         public List<Message> SentMessages { get; set; } = new List<Message>();
+        public List<Appointment> StaffAppointments { get; set; } = new List<Appointment>();
+        public List<Schedule> Schedules { get; set; } = new List<Schedule>();
     }
 }
