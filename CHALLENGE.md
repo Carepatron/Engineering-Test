@@ -98,7 +98,6 @@ You come up with another capability of it!
 
 - Use .NET 8.0 or later (feel free to use another backend language if you need)
 - Use React 18+ with TypeScript
-- Include docker-compose for easy setup (optional but recommended)
 - Provide clear instructions for API keys and configuration
 
 ## How to submit your work
